@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0.0",
+  "report_type": "duplicates_report",
+  "generated_at": "2026-11-26T03:13:09+00:00",
+  "host": {
+    "hostname": "katruyah",
+    "os": "Windows 11"
+  },
+  "source": "C:\\Users\\jbxha\\Desktop\\file_manager_suite\\suite_output\\index_1_disk_c.json, C:\\Users\\jbxha\\Desktop\\file_manager_suite\\suite_output\\index_2_disk_d.json",
+  "options": {
+    "algorithm": "sha256",
+    "min_size_bytes": 1
+  },
+  "summary": {
+    "total_files_evaluated": 12,
+    "duplicate_groups": 2,
+    "total_duplicate_files": 4,
+    "reclaimable_bytes": 4315,
+    "reclaimable_human": "4.21 KB",
+    "warning_count": 0
+  },
+  "warnings": [],
+  "duplicate_groups": [
+    {
+      "group_id": 1,
+      "hash_algorithm": "sha256",
+      "file_hash": "888233826f576a9ba1a394bfda0adfdce5e42e867bc7c09f5d9b29054666ee67",
+      "size_bytes": 2706,
+      "size_human": "2.64 KB",
+      "copy_count": 2,
+      "wasted_bytes": 2706,
+      "wasted_human": "2.64 KB",
+      "files": [
+        {
+          "name": "logo.png",
+          "extension": ".png",
+          "category": "Image",
+          "mime_type": "image/png",
+          "size_bytes": 2706,
+          "size_human": "2.64 KB",
+          "created_at": "2026-11-25T19:44:56",
+          "modified_at": "2026-11-25T19:44:27",
+          "accessed_at": "2026-11-25T21:09:29",
+          "attributes": "A",
+          "is_readonly": false,
+          "is_hidden": false,
+          "drive": "C:",
+          "parent_folder": "C:\\Users\\jbxha\\Desktop\\file_manager_suite\\sample_data\\disk_c\\Photos",
+          "relative_path": "Photos\\logo.png",
+          "full_path": "C:\\Users\\jbxha\\Desktop\\file_manager_suite\\sample_data\\disk_c\\Photos\\logo.png"
+        },
+        {
+          "name": "logo.png",
+          "extension": ".png",
+          "category": "Image",
+          "mime_type": "image/png",
+          "size_bytes": 2706,
+          "size_human": "2.64 KB",
+          "created_at": "2026-11-25T19:44:56",
+          "modified_at": "2026-11-25T19:44:27",
+          "accessed_at": "2026-11-25T21:09:29",
+          "attributes": "A",
+          "is_readonly": false,
+          "is_hidden": false,
+          "drive": "C:",
+          "parent_folder": "C:\\Users\\jbxha\\Desktop\\file_manager_suite\\sample_data\\disk_d\\Backups",
+          "relative_path": "Backups\\logo.png",
+          "full_path": "C:\\Users\\jbxha\\Desktop\\file_manager_suite\\sample_data\\disk_d\\Backups\\logo.png"
+        }
+      ]
+    },
+    {
+      "group_id": 2,
+      "hash_algorithm": "sha256",
+      "file_hash": "0724174ab94b25e1fafd187142c70c2f6d723e4bcf85a85f56878159bd0865ea",
+      "size_bytes": 1609,
+      "size_human": "1.57 KB",
+      "copy_count": 2,
+      "wasted_bytes": 1609,
+      "wasted_human": "1.57 KB",
+      "files": [
+        {
+          "name": "quarterly_report.pdf",
+          "extension": ".pdf",
+          "category": "Document",
+          "mime_type": "application/pdf",
+          "size_bytes": 1609,
+          "size_human": "1.57 KB",
+          "created_at": "2026-11-25T19:44:56",
+          "modified_at": "2026-11-25T19:44:27",
+          "accessed_at": "2026-11-25T21:09:29",
+          "attributes": "A",
+          "is_readonly": false,
+          "is_hidden": false,
+          "drive": "C:",
+          "parent_folder": "C:\\Users\\jbxha\\Desktop\\file_manager_suite\\sample_data\\disk_c\\Documents",
+          "relative_path": "Documents\\quarterly_report.pdf",
+          "full_path": "C:\\Users\\jbxha\\Desktop\\file_manager_suite\\sample_data\\disk_c\\Documents\\quarterly_report.pdf"
+        },
+        {
+          "name": "quarterly_report.pdf",
+          "extension": ".pdf",
+          "category": "Document",
+          "mime_type": "application/pdf",
+          "size_bytes": 1609,
+          "size_human": "1.57 KB",
+          "created_at": "2026-11-25T19:44:56",
+          "modified_at": "2026-11-25T19:44:27",
+          "accessed_at": "2026-11-25T21:09:29",
+          "attributes": "A",
+          "is_readonly": false,
+          "is_hidden": false,
+          "drive": "C:",
+          "parent_folder": "C:\\Users\\jbxha\\Desktop\\file_manager_suite\\sample_data\\disk_d\\Backups\\2026",
+          "relative_path": "Backups\\2026\\quarterly_report.pdf",
+          "full_path": "C:\\Users\\jbxha\\Desktop\\file_manager_suite\\sample_data\\disk_d\\Backups\\2026\\quarterly_report.pdf"
+        }
+      ]
+    }
+  ]
+}

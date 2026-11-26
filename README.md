@@ -25,6 +25,21 @@ python -m file_suite.scan_duplicates --from-index docs_index.json backups_index.
 python -m file_suite.export_report --index docs_index.json --duplicates duplicates.json -o combined_report.xlsx
 ```
 
+## Desktop GUI
+
+Install the application dependencies and launch the PyQt6 desktop interface:
+
+```bash
+pip install -r requirements.txt
+python -m file_suite.gui
+```
+
+The GUI starts with the included sample folders when available. Add or remove
+source folders, choose scan and export options, and run the complete
+indexing/duplicate-detection pipeline in the background. Results can be
+filtered in the file index and duplicate tabs; saved sessions can be reopened
+later.
+
 ## Importing Into a Unified App
 
 ```python
