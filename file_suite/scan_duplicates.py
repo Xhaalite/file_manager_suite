@@ -24,6 +24,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from .index_metadata import scan_directory
 from .schema import DuplicateGroup, build_envelope, format_size, load_json, save_json
+from .security import resolve_regular_file
 
 CHUNK_SIZE = 65536  # 64 KB
 
@@ -177,26 +178,45 @@ def find_duplicates_from_index(
     index_paths: List[Path],
     algo: str = "sha256",
     min_size: int = 1,
+    allowed_roots: Optional[List[Path]] = None,
 ) -> Dict[str, Any]:
     """Load one or more metadata_index.json files and detect duplicates across them."""
     all_entries: List[Dict[str, Any]] = []
     seen_paths = set()
+    warnings: List[str] = []
+    roots = [root.resolve(strict=True) for root in (allowed_roots or [])]
+    if allowed_roots is not None and not roots:
+        raise ValueError("allowed_roots must contain at least one directory.")
+    if allowed_roots is not None and not all(root.is_dir() for root in roots):
+        raise ValueError("Every allowed_root must be an existing directory.")
 
     for idx_path in index_paths:
         data = load_json(idx_path)
         if data.get("report_type") != "metadata_index":
             raise ValueError(f"'{idx_path}' has report_type '{data.get('report_type')}', expected 'metadata_index'.")
+        index_roots = roots or [Path(data["source"]).resolve(strict=True)]
         for item in data.get("files", []):
-            fp = item["full_path"]
-            if fp not in seen_paths:
-                seen_paths.add(fp)
-                all_entries.append(item)
+            try:
+                fp = resolve_regular_file(Path(item["full_path"]), index_roots)
+                st = fp.stat()
+                safe_item = dict(item)
+                safe_item["full_path"] = str(fp)
+                safe_item["size_bytes"] = st.st_size
+                safe_item["size_human"] = format_size(st.st_size)
+            except (KeyError, ValueError, OSError) as exc:
+                warnings.append(f"Index entry skipped: {exc}")
+                continue
+            fp_key = str(fp)
+            if fp_key not in seen_paths:
+                seen_paths.add(fp_key)
+                all_entries.append(safe_item)
 
     return _detect_duplicates_from_entries(
         entries=all_entries,
         source_desc=", ".join(str(p.resolve()) for p in index_paths),
         algo=algo,
         min_size=min_size,
+        warnings=warnings,
     )
 
 
@@ -208,6 +228,10 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--from-index", nargs="+", type=Path, default=None,
         help="Scan files listed in one or more metadata_index.json files instead of walking folders.",
+    )
+    parser.add_argument(
+        "--root", action="append", type=Path, default=None,
+        help="Allowed root for --from-index paths. Repeat for multiple roots.",
     )
     parser.add_argument(
         "-o", "--output", type=Path, default=Path("duplicates_report.json"),
@@ -230,7 +254,12 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 def main(argv: Optional[List[str]] = None) -> int:
     args = parse_args(argv)
     if args.from_index:
-        payload = find_duplicates_from_index(args.from_index, algo=args.algo, min_size=args.min_size)
+        payload = find_duplicates_from_index(
+            args.from_index,
+            algo=args.algo,
+            min_size=args.min_size,
+            allowed_roots=args.root,
+        )
     elif args.directories:
         for d in args.directories:
             if not d.exists() or not d.is_dir():

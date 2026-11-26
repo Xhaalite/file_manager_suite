@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .schema import load_json
+from .security import sanitize_cell
 
 RECOMMENDED_MAX_IMAGE_ROWS = 150
 
@@ -63,15 +64,19 @@ def export_json_to_excel(
 
         for r_idx, item in enumerate(index_data.get("files", []), start=2):
             ws.append([
-                item["name"], item["extension"], item["category"], item["mime_type"],
-                item["size_bytes"], item["size_human"], item["created_at"],
-                item["modified_at"], item["attributes"], item.get("drive", ""),
-                item["full_path"],
+                sanitize_cell(item["name"]), sanitize_cell(item["extension"]),
+                sanitize_cell(item["category"]), sanitize_cell(item["mime_type"]),
+                item["size_bytes"], sanitize_cell(item["size_human"]),
+                sanitize_cell(item["created_at"]), sanitize_cell(item["modified_at"]),
+                sanitize_cell(item["attributes"]), sanitize_cell(item.get("drive", "")),
+                sanitize_cell(item["full_path"]),
             ])
             for c_idx in range(1, len(headers) + 1):
                 c = ws.cell(row=r_idx, column=c_idx)
                 c.font = body_font
                 c.border = border
+                if isinstance(c.value, str):
+                    c.data_type = "s"
                 if r_idx % 2 == 1:
                     c.fill = zebra_fill
                 if c_idx == 5:
@@ -107,13 +112,16 @@ def export_json_to_excel(
             for f in grp["files"]:
                 ws_dup.append([
                     grp["group_id"], grp["copy_count"], grp["size_bytes"],
-                    grp["size_human"], grp["wasted_human"], grp["file_hash"][:16] + "...",
-                    f["name"], f["full_path"],
+                    sanitize_cell(grp["size_human"]), sanitize_cell(grp["wasted_human"]),
+                    sanitize_cell(grp["file_hash"][:16] + "..."),
+                    sanitize_cell(f["name"]), sanitize_cell(f["full_path"]),
                 ])
                 for c_idx in range(1, len(dup_headers) + 1):
                     c = ws_dup.cell(row=r_idx, column=c_idx)
                     c.font = body_font
                     c.border = border
+                    if isinstance(c.value, str):
+                        c.data_type = "s"
                     if grp["group_id"] % 2 == 0:
                         c.fill = zebra_fill
                     if c_idx == 3:
@@ -141,7 +149,12 @@ def export_json_to_excel(
             ("Total Size", s["total_human"]),
         ]:
             ws_sum.cell(row=row, column=1, value=k).font = bold_font
-            ws_sum.cell(row=row, column=2, value=v).font = body_font
+            if isinstance(v, str):
+                ws_sum.cell(row=row, column=2, value=sanitize_cell(v)).font = body_font
+                ws_sum.cell(row=row, column=2).data_type = "s"
+            else:
+                ws_sum.cell(row=row, column=2, value=v).font = body_font
+                ws_sum.cell(row=row, column=2).data_type = "n"
             row += 1
         row += 1
     if duplicates_data:
@@ -153,7 +166,12 @@ def export_json_to_excel(
             ("Reclaimable Space", ds["reclaimable_human"]),
         ]:
             ws_sum.cell(row=row, column=1, value=k).font = bold_font
-            ws_sum.cell(row=row, column=2, value=v).font = body_font
+            if isinstance(v, str):
+                ws_sum.cell(row=row, column=2, value=sanitize_cell(v)).font = body_font
+                ws_sum.cell(row=row, column=2).data_type = "s"
+            else:
+                ws_sum.cell(row=row, column=2, value=v).font = body_font
+                ws_sum.cell(row=row, column=2).data_type = "n"
             row += 1
     ws_sum.column_dimensions["A"].width = 24
     ws_sum.column_dimensions["B"].width = 60

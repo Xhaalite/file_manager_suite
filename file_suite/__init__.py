@@ -7,6 +7,7 @@ from .export_report import export_json_to_excel, export_json_to_image
 from .index_metadata import index_directory, scan_directory
 from .scan_duplicates import find_duplicates, find_duplicates_from_index
 from .schema import SCHEMA_VERSION, DuplicateGroup, FileRecord, load_json, save_json
+from .diff_files import compare_directories
 
 __all__ = [
     "SCHEMA_VERSION",
@@ -20,4 +21,5 @@ __all__ = [
     "export_json_to_image",
     "load_json",
     "save_json",
+    "compare_directories",
 ]

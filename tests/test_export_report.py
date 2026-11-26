@@ -32,6 +32,21 @@ class TestExportReport(unittest.TestCase):
             self.assertGreater(wb["File Index"].max_row, 1)
             self.assertGreater(wb["Duplicate Groups"].max_row, 1)
 
+    def test_excel_formula_prefixes_are_stored_as_text(self) -> None:
+        idx = index_directory(DISK_C)
+        idx["files"][0]["name"] = "=HYPERLINK(\"https://example.test\")"
+        idx["source"] = "@untrusted-source"
+
+        with tempfile.TemporaryDirectory() as tmp:
+            xlsx_path = Path(tmp) / "suite_report.xlsx"
+            export_json_to_excel(xlsx_path, index_data=idx)
+            wb = load_workbook(xlsx_path)
+            name_cell = wb["File Index"].cell(row=2, column=1)
+            source_cell = wb["Summary"]["B3"]
+            self.assertEqual(name_cell.data_type, "s")
+            self.assertTrue(str(name_cell.value).startswith("'"))
+            self.assertEqual(source_cell.data_type, "s")
+
     def test_export_json_to_image_warns_and_skips_when_too_large(self) -> None:
         idx = index_directory(DISK_C)
         with tempfile.TemporaryDirectory() as tmp:

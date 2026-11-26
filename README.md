@@ -8,6 +8,7 @@ A modular Python toolkit for indexing Windows/PC directories, detecting duplicat
 - `file_suite/index_metadata.py` — Walks directories/drives and outputs `metadata_index.json`.
 - `file_suite/scan_duplicates.py` — 3-stage duplicate detector (size grouping → 64 KB partial hash → full SHA-256/BLAKE2b/MD5 hash) that can scan folders directly or consume multiple `metadata_index.json` files (`--from-index`).
 - `file_suite/export_report.py` — Converts `metadata_index.json` and/or `duplicates_report.json` into styled `.xlsx` workbooks or `.png` previews (with large-directory warnings).
+- `file_suite/diff_files.py` — Compares two directories by relative path, size, and SHA-256 content; reports left-only, right-only, changed, and unchanged files.
 
 ## Quick CLI Workflow
 
@@ -23,6 +24,9 @@ python -m file_suite.scan_duplicates --from-index docs_index.json backups_index.
 
 # 3. Export a combined Excel workbook
 python -m file_suite.export_report --index docs_index.json --duplicates duplicates.json -o combined_report.xlsx
+
+# 4. Compare two directories
+python -m file_suite.diff_files "C:\Users\Alice\Documents" "D:\Backups" -o directory_diff.json
 ```
 
 ## Desktop GUI

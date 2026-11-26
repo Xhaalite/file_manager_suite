@@ -38,6 +38,29 @@ class TestScanDuplicates(unittest.TestCase):
             self.assertEqual(report["options"]["algorithm"], "blake2b")
             self.assertEqual(report["summary"]["duplicate_groups"], 2)
 
+    def test_from_index_rejects_paths_outside_allowed_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            outside = Path(tmp) / "outside.bin"
+            root.mkdir()
+            outside.write_bytes(b"outside")
+            idx = index_directory(root)
+            idx["files"] = [{
+                "name": "outside.bin",
+                "full_path": str(outside),
+                "size_bytes": 7,
+                "size_human": "7 B",
+            }]
+            idx_path = Path(tmp) / "tampered.json"
+            save_json(idx, idx_path)
+
+            report = find_duplicates_from_index(
+                [idx_path],
+                allowed_roots=[root],
+            )
+            self.assertEqual(report["summary"]["total_files_evaluated"], 0)
+            self.assertGreater(report["summary"]["warning_count"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()

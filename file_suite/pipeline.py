@@ -19,6 +19,7 @@ from .export_report import export_json_to_excel, export_json_to_image
 from .index_metadata import index_directory
 from .scan_duplicates import find_duplicates_from_index
 from .schema import SCHEMA_VERSION, build_envelope, format_size, load_json, save_json
+from .diff_files import compare_directories
 
 
 @dataclass
@@ -35,7 +36,7 @@ class ScanConfig:
 
 @dataclass
 class ProgressEvent:
-    stage: str          # "indexing" | "deduplicating" | "exporting" | "complete"
+    stage: str          # "indexing" | "deduplicating" | "diffing" | "exporting" | "complete"
     message: str
     step: int
     total_steps: int
@@ -153,12 +154,29 @@ class FileSuitePipeline:
             index_paths=[Path(p) for p in self.state.index_files],
             algo=self.state.config.hash_algo,
             min_size=self.state.config.min_size_bytes,
+            allowed_roots=[Path(d) for d in self.state.config.directories],
         )
         dup_path = Path(self.state.config.output_dir) / "duplicates_report.json"
         save_json(dups, dup_path)
         self.state.duplicates_report = dups
         self.state.warnings.extend(dups.get("warnings", []))
         return dups
+
+    def run_directory_diff(self, left: Path, right: Path) -> Dict[str, Any]:
+        """Compare two directories and save a standardized directory diff report."""
+        self._emit("diffing", f"Comparing {left} with {right}...", 1, 1)
+        report = compare_directories(
+            left,
+            right,
+            recursive=self.state.config.recursive,
+            include_hidden=self.state.config.include_hidden,
+            exclude_patterns=self.state.config.exclude_patterns,
+            algo=self.state.config.hash_algo,
+        )
+        diff_path = Path(self.state.config.output_dir) / "directory_diff.json"
+        save_json(report, diff_path)
+        self.state.warnings.extend(report.get("warnings", []))
+        return report
 
     def run_export(
         self,

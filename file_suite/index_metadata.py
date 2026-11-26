@@ -52,6 +52,9 @@ def scan_directory(
         if _should_exclude(file_path, excludes):
             return
         try:
+            if file_path.is_symlink():
+                warnings.append(f"Skipped symlink {file_path}")
+                return
             st = file_path.stat()
         except (PermissionError, OSError) as exc:
             warnings.append(f"Skipped {file_path}: {exc}")

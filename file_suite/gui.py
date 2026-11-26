@@ -270,6 +270,25 @@ class FileSuiteWindow(QMainWindow):
         layout.addWidget(add_button)
         layout.addWidget(remove_button)
 
+        label = QLabel("DIRECTORY DIFF")
+        label.setObjectName("fieldLabel")
+        layout.addWidget(label)
+        self.diff_left_edit = QLineEdit()
+        self.diff_left_edit.setPlaceholderText("Left folder")
+        self.diff_right_edit = QLineEdit()
+        self.diff_right_edit.setPlaceholderText("Right folder")
+        left_browse = QPushButton("Choose left folder")
+        right_browse = QPushButton("Choose right folder")
+        left_browse.clicked.connect(lambda: self._choose_diff_folder(self.diff_left_edit))
+        right_browse.clicked.connect(lambda: self._choose_diff_folder(self.diff_right_edit))
+        layout.addWidget(self.diff_left_edit)
+        layout.addWidget(left_browse)
+        layout.addWidget(self.diff_right_edit)
+        layout.addWidget(right_browse)
+        diff_button = QPushButton("Run directory diff")
+        diff_button.clicked.connect(self._run_diff)
+        layout.addWidget(diff_button)
+
         label = QLabel("OUTPUT FOLDER")
         label.setObjectName("fieldLabel")
         layout.addWidget(label)
@@ -512,6 +531,11 @@ class FileSuiteWindow(QMainWindow):
         if directory:
             self.output_edit.setText(directory)
 
+    def _choose_diff_folder(self, target: QLineEdit) -> None:
+        directory = QFileDialog.getExistingDirectory(self, "Choose folder")
+        if directory:
+            target.setText(str(Path(directory).resolve()))
+
     def _update_export_state(self) -> None:
         self.run_button.setEnabled(self.xlsx_check.isChecked() or self.png_check.isChecked())
 
@@ -550,6 +574,35 @@ class FileSuiteWindow(QMainWindow):
             action,
             "Scanning folders…",
             on_result=self._scan_completed,
+        )
+
+    def _run_diff(self) -> None:
+        left = self.diff_left_edit.text().strip()
+        right = self.diff_right_edit.text().strip()
+        if not left or not right:
+            QMessageBox.warning(self, "Directory diff", "Choose both a left and right folder.")
+            return
+        output_dir = self.output_edit.text().strip()
+        if not output_dir:
+            QMessageBox.warning(self, "Directory diff", "Choose an output folder.")
+            return
+
+        def action(signals: WorkerSignals) -> tuple[FileSuitePipeline, dict[str, Any]]:
+            config = ScanConfig(
+                directories=[left, right],
+                output_dir=output_dir,
+                recursive=self.recursive_check.isChecked(),
+                include_hidden=self.hidden_check.isChecked(),
+                exclude_patterns=[],
+            )
+            pipeline = FileSuitePipeline(config, on_progress=signals.progress.emit)
+            report = pipeline.run_directory_diff(Path(left), Path(right))
+            return pipeline, report
+
+        self._start_worker(
+            action,
+            "Comparing directories…",
+            on_result=self._diff_completed,
         )
 
     def _start_worker(
@@ -596,6 +649,20 @@ class FileSuiteWindow(QMainWindow):
         self.progress_label.setText("Operation failed")
         self._log(details)
         QMessageBox.critical(self, "Operation failed", details.splitlines()[-1] if details else "Unknown error")
+
+    def _diff_completed(self, result: tuple[FileSuitePipeline, dict[str, Any]]) -> None:
+        pipeline, report = result
+        self.pipeline = pipeline
+        summary = report["summary"]
+        message = (
+            f"Directory diff finished: {summary['total_differences']} differences "
+            f"({summary['only_left']} left-only, {summary['only_right']} right-only, "
+            f"{summary['changed']} changed, {summary['unchanged']} unchanged)."
+        )
+        self.status_label.setText("Diff complete")
+        self._log(message)
+        diff_path = Path(pipeline.state.config.output_dir) / "directory_diff.json"
+        self._log(f"Created report: {diff_path.resolve()}")
 
     def _scan_completed(self, pipeline: FileSuitePipeline) -> None:
         self.pipeline = pipeline
